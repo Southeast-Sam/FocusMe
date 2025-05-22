@@ -4,6 +4,7 @@ import Dashboard from "./pages/Dashboard";
 import NewSession from "./pages/NewSession";
 import History from "./pages/History";
 import Settings from "./pages/Settings";
+import ThemaDetails from "./pages/ThemaDetails";
 
 function App() {
   return (
@@ -21,6 +22,8 @@ function App() {
           <Route path="verlauf" element={<History />} />{" "}
           {/* /einstellungen zeigt die Seite Einstellungen */}
           <Route path="einstellungen" element={<Settings />} />
+          {/* thema/ ist der Start der URL, :name ist ein Platzhalter für ein beliebiges Thema */}
+          <Route path="thema/:name" element={<ThemaDetails />} />
         </Route>
       </Routes>
     </BrowserRouter>

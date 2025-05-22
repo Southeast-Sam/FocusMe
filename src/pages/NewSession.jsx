@@ -1,109 +1,133 @@
 import { useState } from "react";
 
+// Vorschlagsdatenbank
+const vorschlagsDatenbank = {
+  javascript: [
+    "Erstelle eine Funktion mit Array.map()",
+    "Schreibe eine kleine Filter-Funktion",
+    "Baue eine Mini-To-Do Liste",
+  ],
+  html: [
+    "Baue ein Formular mit Input + Button",
+    "Verwende verschiedene HTML-Tags",
+    "Strukturiere eine kleine Webseite mit Semantik",
+  ],
+  css: [
+    "Baue ein Grid-Layout",
+    "Verwende verschiedene HTML-Tags",
+    "Verwende Tailwind Utilities für Abstände",
+  ],
+};
+
 function NewSession() {
-  const [formData, setFormData] = useState({
-    thema: "",
-    typ: "theorie",
-    dauer: "",
-  });
+  const [thema, setThema] = useState(""); // Eingabetext
+  const [vorschlaege, setVorschlaege] = useState([]); // Automatische Vorschläge
+  const [ausgewaehlteAufgabe, setAusgewaehlteAufgabe] = useState(""); // Was final gespeichert wird
 
-  function handleChange(e) {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  }
+  // Analyse der Eingabe & Vorschläge generieren
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setThema(value);
 
-  function handleSubmit(e) {
+    const key = value.toLowerCase().split(" ")[0];
+    if (value.length > 2 && vorschlagsDatenbank[key]) {
+      setVorschlaege(vorschlagsDatenbank[key]);
+    } else {
+      setVorschlaege([]);
+    }
+
+    // Wenn Nutzer neu tippt → Auswahl zurücksetzen
+    setAusgewaehlteAufgabe("");
+  };
+
+  // Formular absenden
+  const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!formData.thema || !formData.dauer) {
-      alert("Bitte alle Felder ausfüllen!");
+    const finaleAufgabe = ausgewaehlteAufgabe || thema;
+
+    if (!thema.trim()) {
+      alert("Bitte ein Thema eingeben!");
       return;
     }
-    console.log("Sessions wurde gespeichert:", formData);
 
-    // Alte Sessions aus localStorage holen
-    const gespeicherteSessions =
-      JSON.parse(localStorage.getItem("sessions")) || [];
+    if (!finaleAufgabe.trim()) {
+      alert("Bitte eine Aufgabe auswählen oder eintippen!");
+      return;
+    }
 
-    // Neue Session hinzufügen
-    const neueSession = {
-      id: Date.now(),
-      ...formData,
-    };
+    // Session speichern
+    const sessions = JSON.parse(localStorage.getItem("sessions")) || [];
 
-    const updatedSessions = [...gespeicherteSessions, neueSession];
+    sessions.push({
+      thema: thema.trim(),
+      aufgabe: finaleAufgabe.trim(),
+      dauer: 0, // Timer kommt später
+    });
 
-    // Zurück in localStorage speichern
-    localStorage.setItem("sessions", JSON.stringify(updatedSessions));
+    localStorage.setItem("sessions", JSON.stringify(sessions));
+    console.log("Gespeichert:", thema, finaleAufgabe);
 
     // Feedback
-    console.log("Session gespeichert:", neueSession);
-    alert(`${formData.thema} wurde gespeichert! ✅`);
+    alert(`${thema} wurde hinzugefügt✅`);
 
-    // Formular zurücksetzen
-    setFormData({
-      thema: "",
-      typ: "theorie",
-      dauer: "",
-    });
-  }
+    // Zurücksetzen
+    setThema("");
+    setVorschlaege([]);
+    setAusgewaehlteAufgabe("");
+  };
 
   return (
     <div className="text-white max-w-md mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Neu Session</h1>
+      <h1 className="text-2xl font-bold mb-6">Neue Session</h1>
 
       <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
-        {/* Thema */}
         <div>
-          <label className="block mb-1">Was hast du gelernt?</label>
+          <label className="block mb-1">Aufgabe oder Thema eingeben</label>
           <input
             type="text"
-            name="thema"
-            value={formData.thema}
-            onChange={handleChange}
-            className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600"
+            value={thema}
+            onChange={handleInputChange}
             placeholder="Neue Thema..."
+            className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600"
           />
         </div>
 
-        {/* Typ */}
-        <div>
-          <label className="block mb-1">Typ</label>
-          <select
-            name="typ"
-            value={formData.typ}
-            onChange={handleChange}
-            className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600"
-          >
-            <option value="theorie">Theorie</option>
-            <option value="praxis">Praxis</option>
-          </select>
-        </div>
-
-        {/* Dauer */}
-        <div>
-          <label className="block mb-1">Dauer (in Minuten)</label>
-          <input
-            type="number"
-            name="dauer"
-            value={formData.dauer}
-            onChange={handleChange}
-            className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600"
-            placeholder="45"
-          />
-        </div>
-
-        {/* Speichern Button */}
         <button
           type="submit"
           className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded"
         >
-          Speichern
+          Starten
         </button>
       </form>
+
+      {ausgewaehlteAufgabe && (
+        <p className="mt-4 text-sm text-gray-400">
+          Ausgewählt:{" "}
+          <span className="font-semibold">{ausgewaehlteAufgabe}</span>
+        </p>
+      )}
+
+      {vorschlaege.length > 0 && (
+        <div className="mt-6 bg-gray-800 p-4 rounded">
+          <h3 className="text-lg font-bold mb-2">Vorschläge</h3>
+          <ul className="space-y-2">
+            {vorschlaege.map((v, index) => (
+              <li
+                key={index}
+                onClick={() => setAusgewaehlteAufgabe(v)}
+                className={`px-3 py-2 rounded cursor-pointer transition-colors ${
+                  ausgewaehlteAufgabe === v
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-700 hover:bg-gray-600"
+                }`}
+              >
+                {v}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
